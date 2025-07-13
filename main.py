@@ -10,7 +10,7 @@ def open_window(module_class):
 # Main application window
 root = tk.Tk()
 root.title("StudyBuddy")
-root.geometry("320x280")  # 🎯 Slightly bigger
+root.geometry("320x280")  # 🎯 Slightly bigger 
 root.configure(bg="#f0f4f7")  # 🎨 Soft background color
 
 # Interface
