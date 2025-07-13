@@ -3,7 +3,7 @@ from task_manager import TaskManager
 from timer import Timer
 from notes import Notes
 
-def open_window(module_class):
+def open_window(module_class):  
     module_window = tk.Toplevel(root)
     module_instance = module_class(module_window)
 
