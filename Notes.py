@@ -1,15 +1,20 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, Toplevel, Label
 import sqlite3
 import datetime
 
 def Notes(root):
     root.title("Quick Notes")
-    root.geometry("420x480")
+
+    # Set full screen
+    try:
+        root.state("zoomed")  # Works on Windows
+    except:
+        root.geometry(f"{root.winfo_screenwidth()}x{root.winfo_screenheight()}")
 
     dark_mode = {"enabled": False}
 
-    # Improved themes
+    # Themes
     light_theme = {
         "bg": "#ffffff", "fg": "#000000",
         "btn_bg": "#007acc", "btn_fg": "#ffffff",
@@ -66,7 +71,8 @@ def Notes(root):
         messagebox.showinfo("Saved", "Note saved successfully!")
 
     def clear_note():
-        text.delete("1.0", tk.END)
+        if messagebox.askyesno("Confirm", "Clear all notes?"):
+            text.delete("1.0", tk.END)
 
     def toggle_mode():
         nonlocal current_theme
@@ -74,16 +80,25 @@ def Notes(root):
         current_theme = dark_theme if dark_mode["enabled"] else light_theme
         apply_theme()
 
-    def apply_theme():
-        th = current_theme
-        root.configure(bg=th["bg"])
-        header.configure(bg=th["bg"], fg=th["fg"])
-        time_label.configure(bg=th["bg"], fg=th["fg"])
-        text.configure(bg=th["text_bg"], fg=th["text_fg"], insertbackground=th["fg"])
-        button_frame.configure(bg=th["bg"])
-        save_btn.configure(bg=th["btn_bg"], fg=th["btn_fg"], relief="raised", font=("Segoe UI", 10, "bold"))
-        clear_btn.configure(bg=th["clear_bg"], fg=th["btn_fg"], relief="raised", font=("Segoe UI", 10, "bold"))
-        mode_btn.configure(bg=th["bg"], fg=th["fg"], activebackground=th["text_bg"], font=("Segoe UI", 10))
+    # Tooltip function
+    def create_tooltip(widget, text):
+        tooltip = Toplevel(widget)
+        tooltip.withdraw()
+        tooltip.overrideredirect(True)
+        tooltip_label = Label(tooltip, text=text, background="#333", foreground="white", padx=5, pady=2, font=("Segoe UI", 9))
+        tooltip_label.pack()
+
+        def enter(event):
+            x = event.x_root + 10
+            y = event.y_root + 10
+            tooltip.geometry(f"+{x}+{y}")
+            tooltip.deiconify()
+
+        def leave(event):
+            tooltip.withdraw()
+
+        widget.bind("<Enter>", enter)
+        widget.bind("<Leave>", leave)
 
     # Buttons
     button_frame = tk.Frame(root)
@@ -97,8 +112,31 @@ def Notes(root):
 
     mode_btn = tk.Button(button_frame, text="🌙 Toggle Dark Mode", command=toggle_mode, padx=12, pady=6)
     mode_btn.pack(side="left", padx=8)
+    create_tooltip(mode_btn, "Switch between Light and Dark mode")
+
+    # Theme function
+    def apply_theme():
+        th = current_theme
+        root.configure(bg=th["bg"])
+        header.configure(bg=th["bg"], fg=th["fg"])
+        time_label.configure(bg=th["bg"], fg=th["fg"])
+        text.configure(bg=th["text_bg"], fg=th["text_fg"], insertbackground=th["fg"])
+        button_frame.configure(bg=th["bg"])
+        save_btn.configure(bg=th["btn_bg"], fg=th["btn_fg"], relief="raised", font=("Segoe UI", 10, "bold"))
+        clear_btn.configure(bg=th["clear_bg"], fg=th["btn_fg"], relief="raised", font=("Segoe UI", 10, "bold"))
+
+        # 🔄 Updated toggle dark mode button style
+        toggle_bg = "#555555" if not dark_mode["enabled"] else "#dddddd"
+        toggle_fg = "#ffffff" if not dark_mode["enabled"] else "#000000"
+        mode_btn.configure(bg=toggle_bg, fg=toggle_fg, activebackground=th["text_bg"], font=("Segoe UI", 10))
 
     apply_theme()
+
+    def on_closing():
+        conn.close()
+        root.destroy()
+
+    root.protocol("WM_DELETE_WINDOW", on_closing)
 
 # Run App
 if __name__ == "__main__":
